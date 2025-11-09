@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>All Projects</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #111;
+            color: #fff;
+            padding: 2rem;
+        }
+
+        .projects {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .project-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 12px;
+            width: 300px;
+            position: relative;
+        }
+
+        .project-card img {
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .tools {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        .btn {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .edit {
+            background: #667eea;
+            color: #fff;
+            margin-right: 0.5rem;
+        }
+
+        .delete {
+            background: #e74c3c;
+            color: #fff;
+        }
+
+        form {
+            display: inline;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('header') %>
+    <h1>All Projects</h1>
+    <div class="projects">
+        <% projects.forEach(project=> { %>
+            <div class="project-card">
+                <% if (project.image) { %>
+                    <img src="/uploads/<%= project.image %>" alt="<%= project.name %>">
+                    <% } %>
+                        <h2>
+                            <%= project.name %>
+                        </h2>
+                        <p><strong>Type:</strong>
+                            <%= project.applicationType %>
+                        </p>
+                        <p>
+                            <%= project.description %>
+                        </p>
+                        <div class="tools">
+                            <strong>Tools:</strong>
+                            <%= project.tools.join(', ') %>
+        </div>
+
+        <div class="actions">
+          <a href="/admin/projects/edit/<%= project._id %>" class="btn edit">Edit</a>
+
+          <form action="/admin/projects/delete/<%= project._id %>" method="POST">
+            <button type="submit" class="btn delete">Delete</button>
+          </form>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</body>
+</html>

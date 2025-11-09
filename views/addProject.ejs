@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Project</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        form {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 400px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.3rem;
+            color: #333;
+        }
+
+        input,
+        textarea,
+        select,
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 1rem;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+        }
+
+        textarea {
+            resize: none;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        #imagePreview {
+            display: none;
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            margin-top: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        #addToolBtn {
+            background: #28a745;
+        }
+
+        #addToolBtn:hover {
+            background: #218838;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background: #f1f1f1;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        li button {
+            width: auto;
+            background: #e74c3c;
+            padding: 4px 8px;
+            font-size: 0.9rem;
+            border-radius: 4px;
+        }
+
+        li button:hover {
+            background: #c0392b;
+        }
+    </style>
+</head>
+
+<body>
+    <form action="/admin/add-project" method="POST" enctype="multipart/form-data">
+        <%- include('header') %>
+
+            <h2>Add New Project</h2>
+
+            <!-- Project Image -->
+            <label>Project Image:</label>
+            <input type="file" name="projectImage" accept="image/*" onchange="previewImage(event)" required />
+            <img id="imagePreview" alt="Preview" />
+
+            <!-- App Type -->
+            <label>Application Type:</label>
+            <select name="appType" required>
+                <option value="">Select type</option>
+                <option value="Web App">Web App</option>
+                <option value="Mobile App">Mobile App</option>
+                <option value="Desktop App">Desktop App</option>
+                <option value="API Service">API Service</option>
+                <option value="Game">Game</option>
+            </select>
+
+            <!-- App Name -->
+            <label>App Name:</label>
+            <input type="text" name="appName" placeholder="Enter app name" required />
+
+            <!-- Description -->
+            <label>Description:</label>
+            <textarea name="description" rows="4" placeholder="Enter description" required></textarea>
+
+            <!-- Tools Section -->
+            <label>Tools Used:</label>
+            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <input type="text" id="toolInput" placeholder="Enter tool name" />
+                <button type="button" id="addToolBtn" onclick="addTool()">+ Add</button>
+            </div>
+
+            <ul id="toolsList"></ul>
+
+            <!-- Hidden field for array -->
+            <input type="hidden" name="tools" id="toolsHidden" />
+
+            <!-- 🌐 New Field: Project Link -->
+            <label>Project Link (URL):</label>
+            <input type="url" name="projectLink" placeholder="https://example.com" pattern="https?://.+"
+                title="Please enter a valid URL starting with http:// or https://" required />
+
+            <button type="submit">Add Project</button>
+    </form>
+
+    <script>
+        const tools = [];
+
+        function addTool() {
+            const input = document.getElementById("toolInput");
+            const value = input.value.trim();
+            if (value === "") return;
+
+            tools.push(value);
+            input.value = "";
+            renderTools();
+        }
+
+        function removeTool(index) {
+            tools.splice(index, 1);
+            renderTools();
+        }
+
+        function renderTools() {
+            const list = document.getElementById("toolsList");
+            list.innerHTML = "";
+            tools.forEach((tool, i) => {
+                const li = document.createElement("li");
+                li.innerHTML = `${tool} <button type="button" onclick="removeTool(${i})">x</button>`;
+                list.appendChild(li);
+            });
+            document.getElementById("toolsHidden").value = JSON.stringify(tools);
+        }
+
+        function previewImage(event) {
+            const image = document.getElementById("imagePreview");
+            image.src = URL.createObjectURL(event.target.files[0]);
+            image.style.display = "block";
+        }
+    </script>
+</body>
+
+</html>

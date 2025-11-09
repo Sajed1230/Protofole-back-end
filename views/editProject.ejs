@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Project</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #111;
+            color: #fff;
+            padding: 2rem;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-width: 500px;
+        }
+
+        input,
+        textarea,
+        select {
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: none;
+            font-size: 1rem;
+        }
+
+        button {
+            padding: 0.7rem;
+            border: none;
+            border-radius: 6px;
+            background: #667eea;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Edit Project: <%= project.name %>
+    </h1>
+    <form action="/admin/projects/edit/<%= project._id %>" method="POST" enctype="multipart/form-data">
+        <label>Name</label>
+        <input type="text" name="appName" value="<%= project.name %>" required>
+
+        <label>Application Type</label>
+        <select name="appType" required>
+            <option value="Web" <%=project.applicationType==='Web' ?'selected':'' %>>Web</option>
+            <option value="Mobile" <%=project.applicationType==='Mobile' ?'selected':'' %>>Mobile</option>
+            <option value="Desktop" <%=project.applicationType==='Desktop' ?'selected':'' %>>Desktop</option>
+        </select>
+
+        <label>Description</label>
+        <textarea name="description" required><%= project.description %></textarea>
+
+        <label>Tools (JSON Array, e.g., ["React","Node"])</label>
+        <input type="text" name="tools" value='<%= JSON.stringify(project.tools) %>'>
+
+        <label>Change Image</label>
+        <input type="file" name="projectImage">
+
+        <button type="submit">Update Project</button>
+    </form>
+</body>
+
+</html>
