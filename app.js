@@ -4,7 +4,10 @@ const connectDB = require("./db"); // We'll create this file
 const path = require("path");
 const app = express();
 const cors = require('cors');
-app.use(cors());
+
+app.use(cors({
+  origin: ["http://localhost:5173", "https://your-frontend-domain.com"]
+}));
 connectDB();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
