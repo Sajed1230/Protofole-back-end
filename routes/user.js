@@ -29,10 +29,9 @@ Router.post("/contact", async (req, res) => {
   try {
     const { name, email, subject, message } = req.body;
 
-    // Email content sent to you
     const mailOptions = {
       from: email,
-      to: process.env.EMAIL_USER, // your inbox
+      to: process.env.EMAIL_USER,
       subject: `📩 New message from ${name}: ${subject}`,
       text: `
 You have received a new contact form message:
@@ -49,10 +48,12 @@ You have received a new contact form message:
     console.log("✅ Email sent successfully!");
     res.status(200).json({ message: "Message sent successfully!" });
   } catch (error) {
-    console.error("❌ Error sending email:", error);
-    res.status(500).json({ error: "Failed to send message." });
+    console.error("❌ Error sending email:", error.message);
+    console.error(error); // full stack trace
+    res.status(500).json({ error: error.message });
   }
 });
+
 
 
 
