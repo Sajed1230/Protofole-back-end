@@ -5,9 +5,7 @@ const path = require("path");
 const app = express();
 const cors = require('cors');
 
-app.use(cors({
-  origin: ["http://localhost:5173", "https://your-frontend-domain.com"]
-}));
+app.use(cors());
 connectDB();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
