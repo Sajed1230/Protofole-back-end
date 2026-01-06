@@ -4,163 +4,298 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Add Project</title>
+    <meta name="theme-color" content="#0a0a0a" />
+    <title>Add New Project - NikeCode Admin</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
             min-height: 100vh;
-            padding: 2rem;
+            padding: 0;
+            margin: 0;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
         }
 
         form {
-            background: #fff;
-            padding: 2rem;
-            border-radius: 12px;
-            width: 400px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         h2 {
             text-align: center;
-            color: #333;
+            color: #fff;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-group {
             margin-bottom: 1.5rem;
         }
 
         label {
             font-weight: 600;
             display: block;
-            margin-bottom: 0.3rem;
-            color: #333;
+            margin-bottom: 0.5rem;
+            color: #b8b8b8;
+            font-size: 0.95rem;
         }
 
         input,
         textarea,
-        select,
-        button {
+        select {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 1rem;
-            border-radius: 6px;
-            border: 1px solid #ccc;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
             font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.2);
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #666;
         }
 
         textarea {
-            resize: none;
+            resize: vertical;
+            min-height: 100px;
         }
 
         button {
-            background: #007bff;
-            color: white;
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
             border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
         }
 
-        button:hover {
-            background: #0056b3;
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            width: auto;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+            width: auto;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            margin-left: 8px;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
         }
 
         #imagePreview {
             display: none;
             width: 100%;
-            max-height: 200px;
+            max-height: 250px;
             object-fit: cover;
-            margin-top: 10px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
+            margin-top: 1rem;
+            border-radius: 10px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
         }
 
-        #addToolBtn {
-            background: #28a745;
+        .tools-container {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 0.5rem;
         }
 
-        #addToolBtn:hover {
-            background: #218838;
+        .tool-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
         }
 
-        ul {
+        .tool-input-group input {
+            flex: 1;
+        }
+
+        .tools-list {
             list-style: none;
             padding: 0;
+            margin-top: 1rem;
         }
 
-        li {
-            background: #f1f1f1;
-            padding: 8px;
-            margin-bottom: 5px;
-            border-radius: 6px;
+        .tools-list li {
+            background: rgba(102, 126, 234, 0.15);
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            border-radius: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border: 1px solid rgba(102, 126, 234, 0.3);
         }
 
-        li button {
-            width: auto;
-            background: #e74c3c;
-            padding: 4px 8px;
-            font-size: 0.9rem;
-            border-radius: 4px;
+        .tools-list li span {
+            color: #fff;
+            font-weight: 500;
         }
 
-        li button:hover {
-            background: #c0392b;
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 12px 16px;
+            background: rgba(102, 126, 234, 0.15);
+            border: 2px dashed rgba(102, 126, 234, 0.5);
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .file-input-label:hover {
+            background: rgba(102, 126, 234, 0.25);
+            border-color: #667eea;
+        }
+
+        @media (max-width: 600px) {
+            form {
+                padding: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 
 <body>
-    <form action="/admin/add-project" method="POST" enctype="multipart/form-data">
-        <%- include('header') %>
+    <%- include('header') %>
+    <div class="container">
+        <form action="/admin/add-project" method="POST" enctype="multipart/form-data">
+            <h2>✨ Add New Project</h2>
 
-            <h2>Add New Project</h2>
-
-            <!-- Project Image -->
-            <label>Project Image:</label>
-            <input type="file" name="projectImage" accept="image/*" onchange="previewImage(event)" required />
-            <img id="imagePreview" alt="Preview" />
-
-            <!-- App Type -->
-            <label>Application Type:</label>
-            <select name="appType" required>
-                <option value="">Select type</option>
-                <option value="Web App">Web App</option>
-                <option value="Mobile App">Mobile App</option>
-                <option value="Desktop App">Desktop App</option>
-                <option value="API Service">API Service</option>
-                <option value="Game">Game</option>
-            </select>
-
-            <!-- App Name -->
-            <label>App Name:</label>
-            <input type="text" name="appName" placeholder="Enter app name" required />
-
-            <!-- Description -->
-            <label>Description:</label>
-            <textarea name="description" rows="4" placeholder="Enter description" required></textarea>
-
-            <!-- Tools Section -->
-            <label>Tools Used:</label>
-            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-                <input type="text" id="toolInput" placeholder="Enter tool name" />
-                <button type="button" id="addToolBtn" onclick="addTool()">+ Add</button>
+            <div class="form-group">
+                <label>📷 Project Image:</label>
+                <div class="file-input-wrapper">
+                    <input type="file" name="projectImage" accept="image/*" id="imageInput" onchange="previewImage(event)" required />
+                    <label for="imageInput" class="file-input-label">Choose Image File</label>
+                </div>
+                <img id="imagePreview" alt="Preview" />
             </div>
 
-            <ul id="toolsList"></ul>
+            <div class="form-group">
+                <label>📱 Application Type:</label>
+                <select name="appType" id="appType" required onchange="toggleAPKField()">
+                    <option value="">Select type</option>
+                    <option value="Web App">Web App</option>
+                    <option value="Mobile App">Mobile App</option>
+                    <option value="Desktop App">Desktop App</option>
+                    <option value="API Service">API Service</option>
+                    <option value="Game">Game</option>
+                </select>
+            </div>
 
-            <!-- Hidden field for array -->
-            <input type="hidden" name="tools" id="toolsHidden" />
+            <div class="form-group" id="apkGroup" style="display: none;">
+                <label>📱 APK File (Optional - for Mobile Apps):</label>
+                <div class="file-input-wrapper">
+                    <input type="file" name="apkFile" id="apkInput" accept=".apk" />
+                    <label for="apkInput" class="file-input-label">Choose APK File (.apk)</label>
+                </div>
+                <small style="color: #888; font-size: 0.85rem; margin-top: 0.5rem; display: block;">Max size: 100MB</small>
+            </div>
 
-            <!-- 🌐 New Field: Project Link -->
-            <label>Project Link (URL):</label>
-            <input type="url" name="projectLink" placeholder="https://example.com" pattern="https?://.+"
-                title="Please enter a valid URL starting with http:// or https://" required />
+            <div class="form-group">
+                <label>🏷️ App Name:</label>
+                <input type="text" name="appName" placeholder="Enter app name" required />
+            </div>
 
-            <button type="submit">Add Project</button>
-    </form>
+            <div class="form-group">
+                <label>📝 Description:</label>
+                <textarea name="description" rows="5" placeholder="Enter detailed description" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>🛠️ Tools Used:</label>
+                <div class="tools-container">
+                    <div class="tool-input-group">
+                        <input type="text" id="toolInput" placeholder="Enter tool name (e.g., React, Node.js)" />
+                        <button type="button" class="btn-secondary" onclick="addTool()">+ Add</button>
+                    </div>
+                    <ul id="toolsList" class="tools-list"></ul>
+                </div>
+                <input type="hidden" name="tools" id="toolsHidden" />
+            </div>
+
+            <div class="form-group" id="projectLinkGroup">
+                <label>🌐 Project Link (URL):</label>
+                <input type="url" name="projectLink" id="projectLink" placeholder="https://example.com" pattern="https?://.+" title="Please enter a valid URL" required />
+            </div>
+
+            <button type="submit" class="btn-primary">🚀 Add Project</button>
+        </form>
+    </div>
 
     <script>
         const tools = [];
@@ -168,7 +303,14 @@
         function addTool() {
             const input = document.getElementById("toolInput");
             const value = input.value.trim();
-            if (value === "") return;
+            if (value === "") {
+                alert("Please enter a tool name");
+                return;
+            }
+            if (tools.includes(value)) {
+                alert("This tool is already added");
+                return;
+            }
 
             tools.push(value);
             input.value = "";
@@ -185,7 +327,7 @@
             list.innerHTML = "";
             tools.forEach((tool, i) => {
                 const li = document.createElement("li");
-                li.innerHTML = `${tool} <button type="button" onclick="removeTool(${i})">x</button>`;
+                li.innerHTML = `<span>${tool}</span> <button type="button" class="btn-danger" onclick="removeTool(${i})">✕</button>`;
                 list.appendChild(li);
             });
             document.getElementById("toolsHidden").value = JSON.stringify(tools);
@@ -193,8 +335,44 @@
 
         function previewImage(event) {
             const image = document.getElementById("imagePreview");
-            image.src = URL.createObjectURL(event.target.files[0]);
-            image.style.display = "block";
+            const file = event.target.files[0];
+            if (file) {
+                image.src = URL.createObjectURL(file);
+                image.style.display = "block";
+            }
+        }
+
+        // Allow Enter key to add tool
+        document.getElementById("toolInput").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                addTool();
+            }
+        });
+
+        // Toggle APK field and URL field based on application type
+        function toggleAPKField() {
+            const appType = document.getElementById("appType").value;
+            const apkGroup = document.getElementById("apkGroup");
+            const apkInput = document.getElementById("apkInput");
+            const projectLinkGroup = document.getElementById("projectLinkGroup");
+            const projectLinkInput = document.getElementById("projectLink");
+            
+            if (appType === "Mobile App") {
+                // Show APK field, hide URL field
+                apkGroup.style.display = "block";
+                apkInput.removeAttribute("required");
+                projectLinkGroup.style.display = "none";
+                projectLinkInput.removeAttribute("required");
+                projectLinkInput.value = "";
+            } else {
+                // Hide APK field, show URL field
+                apkGroup.style.display = "none";
+                apkInput.value = "";
+                apkInput.removeAttribute("required");
+                projectLinkGroup.style.display = "block";
+                projectLinkInput.setAttribute("required", "required");
+            }
         }
     </script>
 </body>

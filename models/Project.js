@@ -6,7 +6,8 @@ const ProjectSchema = new mongoose.Schema({
   description: { type: String, required: true },
   tools: { type: [String], default: [] }, // array of tools
   image: { type: String }, // store the filename or image URL
-  projectLink: { type: String, required: true }, // 🌐 new field for project URL
+  projectLink: { type: String, required: false }, // 🌐 new field for project URL (optional for mobile apps)
+  apkFile: { type: String }, // 📱 APK file URL for mobile apps
   createdAt: { type: Date, default: Date.now },
 });
 

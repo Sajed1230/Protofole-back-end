@@ -15,17 +15,51 @@ cloudinary.config({
 });
 
 // =============================================
-// 📦 Multer Cloudinary Storage Setup
+// 📦 Multer Storage Setup
 // =============================================
-const storage = new CloudinaryStorage({
+const imageStorage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: "projects", // Folder name on Cloudinary
+    folder: "projects/images",
     allowed_formats: ["jpg", "jpeg", "png", "webp"],
   },
 });
 
-const upload = multer({ storage });
+// Memory storage for APK files (will upload to Cloudinary manually)
+const apkMemoryStorage = multer.memoryStorage();
+
+// Helper function to upload APK to Cloudinary
+const uploadAPKToCloudinary = (buffer, filename) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: 'raw',
+        folder: 'projects/apk',
+        public_id: filename.replace(/\.apk$/i, ''),
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
+    
+    const readableStream = new Readable();
+    readableStream.push(buffer);
+    readableStream.push(null);
+    readableStream.pipe(stream);
+  });
+};
+
+// Custom storage that handles both image and APK using memory storage
+const multiUpload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 100 * 1024 * 1024 } // 100MB max (for APK files)
+});
+
+const upload = multer({ 
+  storage: imageStorage,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB for images
+});
 
 // =============================================
 // 🧱 ROUTES
@@ -39,7 +73,10 @@ Router.get("/addproject", (req, res) => {
 // =============================================
 // ➕ Add New Project (Uploads to Cloudinary)
 // =============================================
-Router.post("/add-project", upload.single("projectImage"), async (req, res) => {
+Router.post("/add-project", multiUpload.fields([
+  { name: 'projectImage', maxCount: 1 },
+  { name: 'apkFile', maxCount: 1 }
+]), async (req, res) => {
   try {
     const { appName, appType, description, tools, projectLink } = req.body;
 
@@ -51,13 +88,55 @@ Router.post("/add-project", upload.single("projectImage"), async (req, res) => {
       toolsArray = tools ? [tools] : [];
     }
 
+    let imageUrl = null;
+    let apkUrl = null;
+
+    // Handle image upload
+    if (req.files && req.files.projectImage && req.files.projectImage[0]) {
+      const imageFile = req.files.projectImage[0];
+      try {
+        const imageUpload = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder: 'projects/images',
+              allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
+          const readableStream = new Readable();
+          readableStream.push(imageFile.buffer);
+          readableStream.push(null);
+          readableStream.pipe(stream);
+        });
+        imageUrl = imageUpload.secure_url;
+      } catch (imgErr) {
+        console.error("⚠️ Error uploading image:", imgErr);
+      }
+    }
+
+    // Handle APK file upload
+    if (req.files && req.files.apkFile && req.files.apkFile[0]) {
+      const apkFile = req.files.apkFile[0];
+      try {
+        const apkUpload = await uploadAPKToCloudinary(apkFile.buffer, apkFile.originalname);
+        apkUrl = apkUpload.secure_url;
+        console.log("✅ APK uploaded:", apkUrl);
+      } catch (apkErr) {
+        console.error("⚠️ Error uploading APK:", apkErr);
+      }
+    }
+
     const newProject = new Project({
       appName,
       applicationType: appType,
       description,
       tools: toolsArray,
       projectLink,
-      image: req.file ? req.file.path : null, // ✅ Cloudinary image URL
+      image: imageUrl,
+      apkFile: apkUrl,
     });
 
     await newProject.save();
@@ -66,7 +145,7 @@ Router.post("/add-project", upload.single("projectImage"), async (req, res) => {
     res.redirect("/shop/projects");
   } catch (err) {
     console.error("❌ Error adding project:", err);
-    res.status(500).send("Error adding project");
+    res.status(500).send("Error adding project: " + err.message);
   }
 });
 
@@ -77,13 +156,28 @@ Router.post("/projects/delete/:id", async (req, res) => {
   try {
     const project = await Project.findById(req.params.id);
 
+    // Delete image from Cloudinary
     if (project && project.image) {
-      // Extract public_id from URL to delete from Cloudinary
-      const parts = project.image.split("/");
-      const publicIdWithExt = parts.slice(-2).join("/"); // e.g., "projects/abc123.jpg"
-      const publicId = publicIdWithExt.split(".")[0]; // remove file extension
+      try {
+        const parts = project.image.split("/");
+        const publicIdWithExt = parts.slice(-2).join("/"); // e.g., "projects/abc123.jpg"
+        const publicId = publicIdWithExt.split(".")[0]; // remove file extension
+        await cloudinary.uploader.destroy(publicId);
+      } catch (err) {
+        console.log("Note: Could not delete image from Cloudinary");
+      }
+    }
 
-      await cloudinary.uploader.destroy(publicId);
+    // Delete APK from Cloudinary
+    if (project && project.apkFile) {
+      try {
+        const parts = project.apkFile.split("/");
+        const publicIdWithExt = parts.slice(-2).join("/");
+        const publicId = publicIdWithExt.replace(/\.(apk|zip|bin)$/i, '');
+        await cloudinary.uploader.destroy(`projects/apk/${publicId}`, { resource_type: 'raw' });
+      } catch (err) {
+        console.log("Note: Could not delete APK from Cloudinary");
+      }
     }
 
     await Project.findByIdAndDelete(req.params.id);
@@ -109,9 +203,12 @@ Router.get("/projects/edit/:id", async (req, res) => {
 });
 
 // =============================================
-// ♻️ Update Project (Re-upload Image if Provided)
+// ♻️ Update Project (Re-upload Image/APK if Provided)
 // =============================================
-Router.post("/projects/edit/:id", upload.single("projectImage"), async (req, res) => {
+Router.post("/projects/edit/:id", multiUpload.fields([
+  { name: 'projectImage', maxCount: 1 },
+  { name: 'apkFile', maxCount: 1 }
+]), async (req, res) => {
   try {
     const { appName, appType, description, tools, projectLink } = req.body;
     let toolsArray = [];
@@ -121,6 +218,7 @@ Router.post("/projects/edit/:id", upload.single("projectImage"), async (req, res
       toolsArray = tools ? [tools] : [];
     }
 
+    const project = await Project.findById(req.params.id);
     const updateData = {
       appName,
       applicationType: appType,
@@ -130,18 +228,69 @@ Router.post("/projects/edit/:id", upload.single("projectImage"), async (req, res
     };
 
     // If new image uploaded, replace old Cloudinary image
-    if (req.file) {
-      const project = await Project.findById(req.params.id);
-
+    if (req.files && req.files.projectImage && req.files.projectImage[0]) {
+      const imageFile = req.files.projectImage[0];
+      
       // Delete old image from Cloudinary
       if (project && project.image) {
-        const parts = project.image.split("/");
-        const publicIdWithExt = parts.slice(-2).join("/");
-        const publicId = publicIdWithExt.split(".")[0];
-        await cloudinary.uploader.destroy(publicId);
+        try {
+          const parts = project.image.split("/");
+          const publicIdWithExt = parts.slice(-2).join("/");
+          const publicId = publicIdWithExt.split(".")[0];
+          await cloudinary.uploader.destroy(publicId);
+        } catch (err) {
+          console.log("Note: Could not delete old image");
+        }
       }
+      
+      // Upload new image
+      try {
+        const imageUpload = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder: 'projects/images',
+              allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
+          const readableStream = new Readable();
+          readableStream.push(imageFile.buffer);
+          readableStream.push(null);
+          readableStream.pipe(stream);
+        });
+        updateData.image = imageUpload.secure_url;
+      } catch (err) {
+        console.error("Error uploading image:", err);
+      }
+    }
 
-      updateData.image = req.file.path; // new Cloudinary URL
+    // If new APK uploaded, replace old APK file
+    if (req.files && req.files.apkFile && req.files.apkFile[0]) {
+      const apkFile = req.files.apkFile[0];
+      
+      // Delete old APK from Cloudinary if exists
+      if (project && project.apkFile) {
+        try {
+          const parts = project.apkFile.split("/");
+          const publicIdWithExt = parts.slice(-2).join("/");
+          const publicId = publicIdWithExt.replace(/\.(apk|zip|bin)$/i, '');
+          await cloudinary.uploader.destroy(`projects/apk/${publicId}`, { resource_type: 'raw' });
+        } catch (err) {
+          console.log("Note: Could not delete old APK");
+        }
+      }
+      
+      // Upload new APK
+      try {
+        const apkUpload = await uploadAPKToCloudinary(apkFile.buffer, apkFile.originalname);
+        updateData.apkFile = apkUpload.secure_url;
+        console.log("✅ APK updated:", updateData.apkFile);
+      } catch (err) {
+        console.error("Error uploading APK:", err);
+      }
     }
 
     await Project.findByIdAndUpdate(req.params.id, updateData);
@@ -149,7 +298,7 @@ Router.post("/projects/edit/:id", upload.single("projectImage"), async (req, res
     res.redirect("/shop/projects");
   } catch (err) {
     console.error("❌ Error updating project:", err);
-    res.status(500).send("Error updating project");
+    res.status(500).send("Error updating project: " + err.message);
   }
 });
 
