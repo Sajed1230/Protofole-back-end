@@ -259,8 +259,13 @@
 
             <div class="form-group">
                 <label>📷 Current Image:</label>
-                <% if (project.image) { %>
-                    <img src="<%= project.image %>" alt="Current project image" class="current-image" />
+                <% if (project.image && project.image.trim() !== '') { %>
+                    <img 
+                        src="<%= project.image %>" 
+                        alt="Current project image" 
+                        class="current-image"
+                        onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'200\'%3E%3Crect fill=\'%231a1a2e\' width=\'400\' height=\'200\'/%3E%3Ctext fill=\'%23888\' font-family=\'sans-serif\' font-size=\'18\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\'%3EImage Not Available%3C/text%3E%3C/svg%3E';"
+                    />
                 <% } else { %>
                     <p style="color: #888; font-style: italic;">No image uploaded</p>
                 <% } %>

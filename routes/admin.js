@@ -4,6 +4,7 @@ const Project = require("../models/Project");
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const { Readable } = require("stream");
 
 // =============================================
 // 🔧 Cloudinary Configuration
@@ -112,8 +113,10 @@ Router.post("/add-project", multiUpload.fields([
           readableStream.pipe(stream);
         });
         imageUrl = imageUpload.secure_url;
+        console.log("✅ Image uploaded successfully:", imageUrl);
       } catch (imgErr) {
         console.error("⚠️ Error uploading image:", imgErr);
+        console.error("Image upload error details:", imgErr.message);
       }
     }
 
@@ -142,6 +145,7 @@ Router.post("/add-project", multiUpload.fields([
     await newProject.save();
 
     console.log("✅ New project added:", newProject);
+    console.log("📷 Project image URL:", newProject.image);
     res.redirect("/shop/projects");
   } catch (err) {
     console.error("❌ Error adding project:", err);
@@ -262,8 +266,10 @@ Router.post("/projects/edit/:id", multiUpload.fields([
           readableStream.pipe(stream);
         });
         updateData.image = imageUpload.secure_url;
+        console.log("✅ Image updated successfully:", updateData.image);
       } catch (err) {
         console.error("Error uploading image:", err);
+        console.error("Image update error details:", err.message);
       }
     }
 

@@ -8,6 +8,10 @@ const Router=express.Router()
 Router.get("/api/projects", async (req, res) => {
   try {
     const projects = await Project.find().sort({ createdAt: -1 });
+    // Log image URLs for debugging
+    projects.forEach((project, index) => {
+      console.log(`Project ${index + 1} (${project.appName}): image = ${project.image || 'NO IMAGE'}`);
+    });
     res.json(projects); // send data as JSON
     
   } catch (err) {
