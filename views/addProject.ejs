@@ -218,6 +218,60 @@
             border-color: #667eea;
         }
 
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            border: 4px solid rgba(102, 126, 234, 0.3);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-message {
+            color: #fff;
+            font-size: 1.2rem;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .loading-details {
+            color: #b8b8b8;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            text-align: center;
+        }
+
         @media (max-width: 600px) {
             form {
                 padding: 1.5rem;
@@ -232,8 +286,13 @@
 
 <body>
     <%- include('header') %>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-message">Uploading project...</div>
+        <div class="loading-details" id="loadingDetails">Please wait, this may take a moment for large files.</div>
+    </div>
     <div class="container">
-        <form action="/admin/add-project" method="POST" enctype="multipart/form-data">
+        <form action="/admin/add-project" method="POST" enctype="multipart/form-data" id="projectForm">
             <h2>✨ Add New Project</h2>
 
             <div class="form-group">
@@ -247,7 +306,7 @@
 
             <div class="form-group">
                 <label>📱 Application Type:</label>
-                <select name="appType" id="appType" required onchange="toggleAPKField()">
+                <select name="appType" id="appType" required>
                     <option value="">Select type</option>
                     <option value="Web App">Web App</option>
                     <option value="Mobile App">Mobile App</option>
@@ -255,15 +314,6 @@
                     <option value="API Service">API Service</option>
                     <option value="Game">Game</option>
                 </select>
-            </div>
-
-            <div class="form-group" id="apkGroup" style="display: none;">
-                <label>📱 APK File (Optional - for Mobile Apps):</label>
-                <div class="file-input-wrapper">
-                    <input type="file" name="apkFile" id="apkInput" accept=".apk" />
-                    <label for="apkInput" class="file-input-label">Choose APK File (.apk)</label>
-                </div>
-                <small style="color: #888; font-size: 0.85rem; margin-top: 0.5rem; display: block;">Max size: 100MB</small>
             </div>
 
             <div class="form-group">
@@ -293,12 +343,13 @@
                 <input type="url" name="projectLink" id="projectLink" placeholder="https://example.com" pattern="https?://.+" title="Please enter a valid URL" required />
             </div>
 
-            <button type="submit" class="btn-primary">🚀 Add Project</button>
+            <button type="submit" class="btn-primary" id="submitBtn">🚀 Add Project</button>
         </form>
     </div>
 
     <script>
         const tools = [];
+        let isSubmitting = false;
 
         function addTool() {
             const input = document.getElementById("toolInput");
@@ -350,30 +401,25 @@
             }
         });
 
-        // Toggle APK field and URL field based on application type
-        function toggleAPKField() {
-            const appType = document.getElementById("appType").value;
-            const apkGroup = document.getElementById("apkGroup");
-            const apkInput = document.getElementById("apkInput");
-            const projectLinkGroup = document.getElementById("projectLinkGroup");
-            const projectLinkInput = document.getElementById("projectLink");
-            
-            if (appType === "Mobile App") {
-                // Show APK field, hide URL field
-                apkGroup.style.display = "block";
-                apkInput.removeAttribute("required");
-                projectLinkGroup.style.display = "none";
-                projectLinkInput.removeAttribute("required");
-                projectLinkInput.value = "";
-            } else {
-                // Hide APK field, show URL field
-                apkGroup.style.display = "none";
-                apkInput.value = "";
-                apkInput.removeAttribute("required");
-                projectLinkGroup.style.display = "block";
-                projectLinkInput.setAttribute("required", "required");
+        // Handle form submission with loading indicator
+        document.getElementById("projectForm").addEventListener("submit", function(e) {
+            const submitBtn = document.getElementById("submitBtn");
+            const loadingOverlay = document.getElementById("loadingOverlay");
+            const loadingDetails = document.getElementById("loadingDetails");
+
+            // Prevent double submission
+            if (isSubmitting) {
+                e.preventDefault();
+                return false;
             }
-        }
+            isSubmitting = true;
+
+            // Show loading overlay
+            loadingDetails.textContent = "Uploading project... Please wait.";
+            loadingOverlay.classList.add("active");
+            submitBtn.disabled = true;
+            submitBtn.textContent = "⏳ Uploading...";
+        });
     </script>
 </body>
 

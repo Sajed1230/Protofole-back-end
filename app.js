@@ -18,9 +18,12 @@ app.use(cors({
 }));
 
 connectDB();
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '100mb' })); // Increased for APK files
+app.use(express.urlencoded({ extended: true, limit: '100mb' })); // Increased for APK files
 app.use(express.static(path.join(__dirname, "public"))); // serve public folder
+
+// Increase timeout for large file uploads (APK files can be large)
+app.timeout = 300000; // 5 minutes timeout
 
 const adminRouter = require("./routes/admin");
 const projectRouter = require("./routes/shop");

@@ -75,8 +75,7 @@ Router.get("/addproject", (req, res) => {
 // ➕ Add New Project (Uploads to Cloudinary)
 // =============================================
 Router.post("/add-project", multiUpload.fields([
-  { name: 'projectImage', maxCount: 1 },
-  { name: 'apkFile', maxCount: 1 }
+  { name: 'projectImage', maxCount: 1 }
 ]), async (req, res) => {
   try {
     const { appName, appType, description, tools, projectLink } = req.body;
@@ -90,7 +89,6 @@ Router.post("/add-project", multiUpload.fields([
     }
 
     let imageUrl = null;
-    let apkUrl = null;
 
     // Handle image upload
     if (req.files && req.files.projectImage && req.files.projectImage[0]) {
@@ -120,18 +118,6 @@ Router.post("/add-project", multiUpload.fields([
       }
     }
 
-    // Handle APK file upload
-    if (req.files && req.files.apkFile && req.files.apkFile[0]) {
-      const apkFile = req.files.apkFile[0];
-      try {
-        const apkUpload = await uploadAPKToCloudinary(apkFile.buffer, apkFile.originalname);
-        apkUrl = apkUpload.secure_url;
-        console.log("✅ APK uploaded:", apkUrl);
-      } catch (apkErr) {
-        console.error("⚠️ Error uploading APK:", apkErr);
-      }
-    }
-
     const newProject = new Project({
       appName,
       applicationType: appType,
@@ -139,7 +125,6 @@ Router.post("/add-project", multiUpload.fields([
       tools: toolsArray,
       projectLink,
       image: imageUrl,
-      apkFile: apkUrl,
     });
 
     await newProject.save();
@@ -291,11 +276,21 @@ Router.post("/projects/edit/:id", multiUpload.fields([
       
       // Upload new APK
       try {
-        const apkUpload = await uploadAPKToCloudinary(apkFile.buffer, apkFile.originalname);
+        const fileSizeMB = (apkFile.size / (1024 * 1024)).toFixed(2);
+        console.log(`📱 Updating APK file: ${apkFile.originalname} (${fileSizeMB} MB)`);
+        
+        // Add timeout for large files (5 minutes)
+        const uploadPromise = uploadAPKToCloudinary(apkFile.buffer, apkFile.originalname);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('APK upload timeout. File may be too large.')), 300000)
+        );
+        
+        const apkUpload = await Promise.race([uploadPromise, timeoutPromise]);
         updateData.apkFile = apkUpload.secure_url;
-        console.log("✅ APK updated:", updateData.apkFile);
+        console.log("✅ APK updated successfully:", updateData.apkFile);
       } catch (err) {
         console.error("Error uploading APK:", err);
+        console.error("APK update error details:", err.message);
       }
     }
 

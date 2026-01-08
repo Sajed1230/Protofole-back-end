@@ -201,6 +201,60 @@
             font-weight: 500;
         }
 
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            border: 4px solid rgba(102, 126, 234, 0.3);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-message {
+            color: #fff;
+            font-size: 1.2rem;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .loading-details {
+            color: #b8b8b8;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            text-align: center;
+        }
+
         @media (max-width: 600px) {
             form {
                 padding: 1.5rem;
@@ -215,8 +269,13 @@
 
 <body>
     <%- include('header') %>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-message">Updating project...</div>
+        <div class="loading-details" id="loadingDetails">Please wait, this may take a moment for large files.</div>
+    </div>
     <div class="container">
-        <form action="/admin/projects/edit/<%= project._id %>" method="POST" enctype="multipart/form-data">
+        <form action="/admin/projects/edit/<%= project._id %>" method="POST" enctype="multipart/form-data" id="projectForm">
             <h1>✏️ Edit Project: <%= project.appName || project.name %></h1>
 
             <div class="form-group">
@@ -298,12 +357,13 @@
                 <small style="color: #888; font-size: 0.85rem; margin-top: 0.5rem; display: block;">Max size: 100MB</small>
             </div>
 
-            <button type="submit">💾 Update Project</button>
+            <button type="submit" class="btn-primary" id="submitBtn">💾 Update Project</button>
         </form>
     </div>
 
     <script>
         const tools = <%- JSON.stringify(project.tools || []) %>;
+        let isSubmitting = false;
         
         function initTools() {
             renderTools();
@@ -366,6 +426,36 @@
                 apkInput.value = "";
             }
         }
+
+        // Handle form submission with loading indicator
+        document.getElementById("projectForm").addEventListener("submit", function(e) {
+            const submitBtn = document.getElementById("submitBtn");
+            const loadingOverlay = document.getElementById("loadingOverlay");
+            const loadingDetails = document.getElementById("loadingDetails");
+            const apkInput = document.getElementById("apkInput");
+            const appType = document.getElementById("appType").value;
+
+            // Prevent double submission
+            if (isSubmitting) {
+                e.preventDefault();
+                return false;
+            }
+            isSubmitting = true;
+
+            // Check if APK file is being uploaded
+            if (appType === "Mobile App" && apkInput.files.length > 0) {
+                const apkFile = apkInput.files[0];
+                const fileSizeMB = (apkFile.size / (1024 * 1024)).toFixed(2);
+                loadingDetails.textContent = `Uploading APK file (${fileSizeMB} MB)... This may take a while for large files.`;
+            } else {
+                loadingDetails.textContent = "Updating project... Please wait.";
+            }
+
+            // Show loading overlay
+            loadingOverlay.classList.add("active");
+            submitBtn.disabled = true;
+            submitBtn.textContent = "⏳ Updating...";
+        });
     </script>
 </body>
 
